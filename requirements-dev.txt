@@ -1,0 +1,18 @@
+# Development Dependencies
+# Include all production dependencies
+-r requirements.txt
+
+# Testing Dependencies
+pytest>=7.4.0              # Testing framework
+pytest-playwright>=0.4.0   # Playwright test integration
+pytest-cov>=4.1.0          # Coverage reporting
+pytest-mock>=3.12.0        # Enhanced mocking
+
+# Code Quality Tools
+ruff>=0.1.0                # Fast Python linter and formatter
+mypy>=1.7.0                # Static type checker
+pre-commit>=3.5.0          # Git hooks framework
+
+# Type Stubs (if available)
+# types-playwright          # Type stubs for Playwright (uncomment if available)
+
