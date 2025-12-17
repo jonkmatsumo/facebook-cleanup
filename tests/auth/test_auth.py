@@ -1,6 +1,7 @@
 """
 Unit tests for authentication and session management modules.
 """
+
 import json
 from pathlib import Path
 from unittest.mock import MagicMock, Mock, patch
@@ -24,7 +25,12 @@ def valid_cookie_data():
     return {
         "cookies": [
             {"name": "c_user", "value": "123456789", "domain": ".facebook.com", "path": "/"},
-            {"name": "xs", "value": "abc123def456", "domain": ".facebook.com", "path": "/"},
+            {
+                "name": "xs",
+                "value": "abc123def456",  # pragma: allowlist secret
+                "domain": ".facebook.com",
+                "path": "/",
+            },
             {"name": "datr", "value": "xyz789", "domain": ".facebook.com", "path": "/"},
         ],
         "origins": [],
