@@ -6,12 +6,15 @@ from pathlib import Path
 from typing import Optional
 
 from playwright.sync_api import Browser, BrowserContext
-from playwright_stealth import stealth_sync
+from playwright_stealth import Stealth
 
 from config import settings
 from src.utils.logging import get_logger
 
 logger = get_logger(__name__)
+
+# Create a singleton Stealth instance for reuse
+_stealth_instance = Stealth()
 
 
 def get_browser_args() -> list[str]:
@@ -117,7 +120,7 @@ def apply_stealth_patches(page) -> None:
     """
     try:
         logger.debug("Applying stealth patches to page...")
-        stealth_sync(page)
+        _stealth_instance.apply_stealth_sync(page)
         logger.debug("Stealth patches applied successfully")
     except Exception as e:
         logger.warning(f"Failed to apply stealth patches: {e}")
