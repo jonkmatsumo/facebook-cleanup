@@ -13,31 +13,6 @@ from src.auth.session_validator import SessionValidator
 
 
 @pytest.fixture
-def temp_cookie_file(tmp_path):
-    """Create a temporary cookie file for testing."""
-    cookie_file = tmp_path / "cookies.json"
-    return cookie_file
-
-
-@pytest.fixture
-def valid_cookie_data():
-    """Valid cookie data structure."""
-    return {
-        "cookies": [
-            {"name": "c_user", "value": "123456789", "domain": ".facebook.com", "path": "/"},
-            {
-                "name": "xs",
-                "value": "abc123def456",  # pragma: allowlist secret
-                "domain": ".facebook.com",
-                "path": "/",
-            },
-            {"name": "datr", "value": "xyz789", "domain": ".facebook.com", "path": "/"},
-        ],
-        "origins": [],
-    }
-
-
-@pytest.fixture
 def invalid_cookie_data():
     """Invalid cookie data structure."""
     return {
