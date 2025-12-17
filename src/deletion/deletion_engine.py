@@ -3,10 +3,15 @@ Deletion engine for orchestrating item extraction, handler selection, and deleti
 """
 from typing import Optional
 from datetime import datetime
+from pathlib import Path
 from playwright.sync_api import Page
 from config import settings
 from src.deletion.item_extractor import ItemExtractor
 from src.deletion.handlers import get_all_handlers, DeletionHandler
+from src.safety.rate_limiter import RateLimiter
+from src.safety.error_detector import ErrorDetector
+from src.safety.block_manager import BlockManager
+from src.utils.state_manager import StateManager
 from src.utils.logging import get_logger
 
 logger = get_logger(__name__)
@@ -20,6 +25,10 @@ class DeletionEngine:
         page: Page,
         target_date: Optional[datetime] = None,
         handlers: Optional[list[DeletionHandler]] = None,
+        rate_limiter: Optional[RateLimiter] = None,
+        error_detector: Optional[ErrorDetector] = None,
+        block_manager: Optional[BlockManager] = None,
+        state_manager: Optional[StateManager] = None,
         logger_instance=None
     ):
         """
@@ -29,6 +38,10 @@ class DeletionEngine:
             page: Playwright Page object
             target_date: Date threshold for deletion (defaults to settings.TARGET_YEAR)
             handlers: Optional list of handlers (defaults to all registered handlers)
+            rate_limiter: Optional RateLimiter instance
+            error_detector: Optional ErrorDetector instance
+            block_manager: Optional BlockManager instance
+            state_manager: Optional StateManager instance
             logger_instance: Optional logger instance
         """
         self.page = page
@@ -36,7 +49,17 @@ class DeletionEngine:
         self.handlers = handlers or get_all_handlers()
         self.logger = logger_instance or logger
         
+        # Initialize safety mechanisms
+        self.rate_limiter = rate_limiter or RateLimiter()
+        self.error_detector = error_detector or ErrorDetector()
+        self.block_manager = block_manager or BlockManager()
+        self.state_manager = state_manager or StateManager(settings.PROGRESS_PATH)
+        
         self.item_extractor = ItemExtractor(self.target_date)
+        
+        # Apply backoff if block was previously detected
+        if self.block_manager.block_detected:
+            self.block_manager.apply_backoff(self.rate_limiter)
         
         self.logger.info(
             f"DeletionEngine initialized with {len(self.handlers)} handlers, "
@@ -76,7 +99,45 @@ class DeletionEngine:
         for i, item in enumerate(items, 1):
             self.logger.debug(f"Processing item {i}/{len(items)}: {item.get('type')} from {item.get('date_string')}")
             
+            # Check if we should continue (block check)
+            if not self.block_manager.should_continue():
+                self.logger.error("Block detected, stopping deletion")
+                stats['errors'].append({
+                    'item': 'block',
+                    'date': 'N/A',
+                    'error': 'Action block detected, must wait'
+                })
+                break
+            
+            # Check rate limit and apply delay
+            if not self.rate_limiter.wait_before_action():
+                self.logger.warning("Rate limit exceeded, stopping deletion")
+                stats['errors'].append({
+                    'item': 'rate_limit',
+                    'date': 'N/A',
+                    'error': 'Rate limit exceeded'
+                })
+                break
+            
+            # Attempt deletion
             result = self.delete_item(page, item)
+            
+            # Record action (even if failed, to track attempts)
+            self.rate_limiter.record_action()
+            
+            # Check for errors after deletion
+            error_detected, error_message = self.error_detector.check_for_errors(page)
+            if error_detected:
+                block_detected = self.block_manager.check_and_handle_block(page, self.error_detector)
+                if block_detected:
+                    self.logger.error(f"Block detected after deletion: {error_message}")
+                    self.block_manager.apply_backoff(self.rate_limiter)
+                    stats['errors'].append({
+                        'item': item.get('type', 'unknown'),
+                        'date': item.get('date_string', 'unknown'),
+                        'error': f"Block detected: {error_message}"
+                    })
+                    break
             
             if result[0]:  # Success
                 stats['deleted'] += 1
@@ -90,6 +151,9 @@ class DeletionEngine:
                     'error': error_msg
                 })
                 self.logger.warning(f"Failed to delete item {i}/{len(items)}: {error_msg}")
+        
+        # Update state with statistics
+        self._update_progress_state(stats)
         
         self.logger.info(
             f"Page processing complete: {stats['deleted']} deleted, "
@@ -142,4 +206,30 @@ class DeletionEngine:
                 continue
         
         return None
+    
+    def _update_progress_state(self, stats: dict) -> None:
+        """
+        Update progress state with current statistics.
+        
+        Args:
+            stats: Statistics dictionary from process_page
+        """
+        try:
+            state = self.state_manager.get_state()
+            
+            # Update statistics
+            state['total_deleted'] += stats['deleted']
+            state['deleted_today'] += stats['deleted']
+            state['errors_encountered'] += len(stats['errors'])
+            
+            # Update block information
+            state['block_detected'] = self.block_manager.block_detected
+            state['block_count'] = self.block_manager.block_count
+            
+            # Save state
+            self.state_manager.save_state(state)
+        
+        except Exception as e:
+            self.logger.warning(f"Failed to update progress state: {e}")
+            # Don't fail the operation if state save fails
 

@@ -6,8 +6,6 @@ Automated deletion of Facebook content created before 2021 using browser automat
 
 This project provides a programmatic solution for bulk deletion of historical Facebook content. It uses Playwright to automate the deletion process through Facebook's legacy mobile interface (`mbasic.facebook.com`) with built-in safety measures to avoid account lockouts.
 
-**⚠️ Warning**: This tool violates Facebook's Terms of Service regarding automated actions. Use at your own risk. The risk of account suspension is real.
-
 ## Project Status
 
 **Environment Setup** ✅ Complete
@@ -181,20 +179,3 @@ pytest tests/
 ### Code Style
 
 Follow PEP 8 Python style guidelines.
-
-## Legal Disclaimer
-
-This tool is for personal use only. Automating actions on Facebook violates their Terms of Service. Use at your own risk. The authors are not responsible for any account suspensions or other consequences.
-
-## License
-
-[Specify license here]
-
-## Contributing
-
-[Contributing guidelines if applicable]
-
-## Support
-
-For detailed technical information, see `DESIGN_DOCUMENT.md`.
-
