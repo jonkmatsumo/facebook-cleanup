@@ -15,44 +15,44 @@ flowchart TD
     BrowserMgr --> Auth[Authenticate with Cookies]
     Auth --> Stealth[Apply Stealth Config]
     Stealth --> Traversal[TraversalEngine]
-    
+
     Traversal --> IterateYears[Iterate Years 2020→2004]
     IterateYears --> IterateMonths[Iterate Months Dec→Jan]
     IterateMonths --> Navigate[Navigate to Activity Log]
     Navigate --> Pagination[Handle Pagination]
-    
+
     Pagination --> DeletionEngine[DeletionEngine]
     DeletionEngine --> Extract[Extract Items]
     Extract --> Filter[Filter by Date < 2021]
-    
+
     Filter --> RateLimit[Rate Limiter Check]
     RateLimit -->|Under Limit| Delay[Apply Gaussian Delay]
     RateLimit -->|Exceeded| Stop[Stop & Save State]
-    
+
     Delay --> Delete[Delete Item]
     Delete --> ErrorCheck[Error Detector]
     ErrorCheck -->|Error Found| BlockCheck[Block Manager]
     ErrorCheck -->|No Error| SaveProgress[Save Progress]
-    
+
     BlockCheck -->|Block Detected| Stop
     BlockCheck -->|No Block| SaveProgress
-    
+
     SaveProgress --> MoreItems{More Items?}
     MoreItems -->|Yes| RateLimit
     MoreItems -->|No| MorePages{More Pages?}
-    
+
     MorePages -->|Yes| Pagination
     MorePages -->|No| MoreMonths{More Months?}
-    
+
     MoreMonths -->|Yes| IterateMonths
     MoreMonths -->|No| MoreYears{More Years?}
-    
+
     MoreYears -->|Yes| IterateYears
     MoreYears -->|No| TrashCleanup[Cleanup Trash]
-    
+
     TrashCleanup --> Statistics[Print Statistics]
     Statistics --> End[Complete]
-    
+
     Stop --> SaveFinal[Save Final State]
     SaveFinal --> End
 ```

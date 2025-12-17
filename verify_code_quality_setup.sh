@@ -80,4 +80,3 @@ echo "  - Fix any linting issues: ruff check src/ --fix"
 echo "  - Format code: ruff format src/"
 echo "  - Address type issues: mypy src/"
 echo "  - Run tests with coverage: pytest --cov=src --cov-report=html"
-

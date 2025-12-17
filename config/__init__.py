@@ -2,5 +2,6 @@
 Configuration module for Facebook cleanup project.
 """
 
-from config.settings import *
+from config import settings
 
+__all__ = ["settings"]

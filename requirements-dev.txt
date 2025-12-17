@@ -15,4 +15,3 @@ pre-commit>=3.5.0          # Git hooks framework
 
 # Type Stubs (if available)
 # types-playwright          # Type stubs for Playwright (uncomment if available)
-

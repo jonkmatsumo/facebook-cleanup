@@ -27,9 +27,9 @@ USER_AGENT = "Mozilla/5.0 (Linux; U; Android 4.4.2; en-us; SCH-I535 Build/KOT49H
 
 # Content Types
 TARGET_CATEGORIES = [
-    "cluster_11",   # Posts
-    "cluster_116", # Comments
-    "cluster_15"   # Likes/Reactions
+    "cluster_11",  # Posts
+    "cluster_116",  # Comments
+    "cluster_15",  # Likes/Reactions
 ]
 
 # Paths (relative to BASE_DIR)
@@ -48,4 +48,3 @@ HEADLESS = os.getenv("HEADLESS", "false").lower() == "true"
 LOG_DIR.mkdir(parents=True, exist_ok=True)
 COOKIES_PATH.parent.mkdir(parents=True, exist_ok=True)
 PROGRESS_PATH.parent.mkdir(parents=True, exist_ok=True)
-

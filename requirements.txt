@@ -8,4 +8,3 @@ python-dotenv>=1.0.0       # Environment variables
 # Optional Dependencies (for testing)
 pytest>=7.4.0              # Testing framework
 pytest-playwright>=0.4.0   # Playwright test integration
-

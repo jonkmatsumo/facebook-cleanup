@@ -18,4 +18,3 @@ ignore = [
 
 [lint.per-file-ignores]
 "tests/**/*.py" = ["E501", "F401"]  # Allow longer lines and unused imports in tests
-
