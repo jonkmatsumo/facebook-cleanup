@@ -1,6 +1,7 @@
 """
 URL builder for Facebook Activity Log navigation.
 """
+
 from typing import Optional
 
 from src.utils.logging import get_logger

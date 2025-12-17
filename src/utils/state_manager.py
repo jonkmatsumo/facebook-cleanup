@@ -1,6 +1,7 @@
 """
 Progress state manager for saving and loading operation state.
 """
+
 import json
 import shutil
 from datetime import datetime

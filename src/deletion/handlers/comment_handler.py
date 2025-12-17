@@ -1,6 +1,7 @@
 """
 Comment deletion handler for Facebook comments.
 """
+
 from typing import Optional, cast
 
 from playwright.sync_api import Locator, Page

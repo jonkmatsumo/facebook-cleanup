@@ -1,6 +1,7 @@
 """
 Configuration constants for Facebook cleanup project.
 """
+
 import os
 from pathlib import Path
 

@@ -1,6 +1,6 @@
 # Core Dependencies
 playwright>=1.40.0          # Browser automation
-playwright-stealth>=0.1.0  # Anti-detection
+playwright-stealth>=1.0.0  # Anti-detection
 beautifulsoup4>=4.12.0     # HTML parsing (if needed)
 dateparser>=1.2.0          # Fuzzy date parsing
 python-dotenv>=1.0.0       # Environment variables

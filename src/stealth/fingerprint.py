@@ -1,6 +1,7 @@
 """
 Stealth configuration module for browser fingerprint masking and anti-detection.
 """
+
 from pathlib import Path
 from typing import Optional
 

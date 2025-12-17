@@ -1,6 +1,7 @@
 """
 Item extractor for parsing Activity Log pages and extracting deletable items.
 """
+
 from datetime import datetime
 from typing import Any, Dict, List, Optional, cast
 

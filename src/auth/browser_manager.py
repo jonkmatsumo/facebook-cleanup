@@ -1,6 +1,7 @@
 """
 Browser manager for creating authenticated browser sessions with stealth configuration.
 """
+
 from pathlib import Path
 from typing import Optional, Tuple
 

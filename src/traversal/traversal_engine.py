@@ -1,6 +1,7 @@
 """
 Traversal engine for navigating Facebook Activity Log by year and month.
 """
+
 from datetime import datetime
 from typing import Generator, Optional
 

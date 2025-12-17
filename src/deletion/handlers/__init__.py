@@ -1,6 +1,7 @@
 """
 Deletion handlers registry.
 """
+
 from src.deletion.handlers.base_handler import DeletionHandler
 from src.deletion.handlers.comment_handler import CommentDeletionHandler
 from src.deletion.handlers.post_handler import PostDeletionHandler

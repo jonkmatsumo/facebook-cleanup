@@ -1,6 +1,7 @@
 """
 Error detector for Facebook error messages indicating blocks or throttling.
 """
+
 from typing import Optional
 
 from playwright.sync_api import Page

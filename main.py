@@ -4,6 +4,7 @@ Facebook Cleanup - Main entry point.
 
 Automated deletion of Facebook content created before 2021.
 """
+
 import re
 import signal
 import sys

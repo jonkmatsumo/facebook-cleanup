@@ -1,6 +1,7 @@
 """
 Stealth and anti-detection modules.
 """
+
 from src.stealth.behavior import human_delay, micro_pause, wait_before_action
 from src.stealth.fingerprint import (
     apply_stealth_patches,

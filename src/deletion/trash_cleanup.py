@@ -1,6 +1,7 @@
 """
 Trash/Recycle Bin cleanup module for Facebook.
 """
+
 from typing import Any, Dict
 
 from playwright.sync_api import Page

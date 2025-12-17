@@ -1,6 +1,7 @@
 """
 Post deletion handler for standard Facebook posts.
 """
+
 from typing import Optional, cast
 
 from playwright.sync_api import Locator, Page

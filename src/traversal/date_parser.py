@@ -1,6 +1,7 @@
 """
 Date parser for Facebook fuzzy date strings.
 """
+
 import re
 from datetime import datetime, timedelta
 from typing import Optional, cast
@@ -69,7 +70,7 @@ class DateParser:
             )
             if parsed:
                 logger.debug(f"Parsed '{date_string}' as {parsed}")
-                return parsed
+                return cast(datetime, parsed)
         except Exception as e:
             logger.debug(f"dateparser failed for '{date_string}': {e}")
 

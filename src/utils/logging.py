@@ -1,6 +1,7 @@
 """
 Structured logging setup for Facebook cleanup project.
 """
+
 import logging
 import sys
 from datetime import datetime

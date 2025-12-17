@@ -1,6 +1,7 @@
 """
 Reaction removal handler for Facebook likes and reactions.
 """
+
 from typing import Optional, cast
 
 from playwright.sync_api import Locator, Page

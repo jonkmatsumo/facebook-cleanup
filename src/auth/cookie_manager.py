@@ -1,6 +1,7 @@
 """
 Cookie management module for loading and validating Facebook session cookies.
 """
+
 import json
 from pathlib import Path
 from typing import Optional, cast
@@ -180,7 +181,7 @@ class CookieManager:
         all_present, missing = self.check_required_cookies()
         if not all_present:
             raise ValueError(
-                f"Missing required cookies: {missing}\n" "Please re-export your Facebook cookies."
+                f"Missing required cookies: {missing}\nPlease re-export your Facebook cookies."
             )
 
         return self.cookies_data

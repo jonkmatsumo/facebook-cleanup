@@ -1,6 +1,7 @@
 """
 Pagination handler for navigating through Activity Log pages.
 """
+
 from typing import Optional
 
 from playwright.sync_api import Page

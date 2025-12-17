@@ -1,6 +1,7 @@
 """
 Base deletion handler interface using Strategy pattern.
 """
+
 from abc import ABC, abstractmethod
 from typing import Optional
 
