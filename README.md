@@ -6,15 +6,6 @@ Automated deletion of Facebook content created before 2021 using browser automat
 
 This project provides a programmatic solution for bulk deletion of historical Facebook content. It uses Playwright to automate the deletion process through Facebook's legacy mobile interface (`mbasic.facebook.com`) with built-in safety measures to avoid account lockouts.
 
-## Project Status
-
-**Environment Setup** ✅ Complete
-
-- Project structure created
-- Dependencies defined
-- Configuration system in place
-- Logging infrastructure ready
-
 ## Prerequisites
 
 - Python 3.8 or higher
@@ -94,18 +85,55 @@ Edit `.env` and set:
 
 ## Usage
 
-### Verify Setup
+### Running the Cleanup
 
-Run the main script to verify your environment:
+Once cookies are configured, run the cleanup script:
 
 ```bash
 python main.py
 ```
 
-This will:
-- Initialize logging
-- Display configuration settings
-- Verify directory structure
+The script will:
+1. Load saved progress (if exists) and resume from last position
+2. Create authenticated browser session
+3. Navigate through Activity Log by year and month
+4. Extract and delete items created before 2021
+5. Save progress after each page
+6. Handle errors and blocks automatically
+7. Display final statistics
+
+### Resume Capability
+
+If the script is interrupted (Ctrl+C) or encounters an error:
+- Progress is automatically saved to `data/progress.json`
+- Run the script again to resume from the last position
+- Already processed items are skipped
+
+### Interrupting the Script
+
+Press `Ctrl+C` to interrupt:
+- Current progress is saved
+- Browser resources are cleaned up
+- You can resume later by running the script again
+
+### Error Handling
+
+The script automatically handles:
+- **Rate Limit Exceeded**: Stops and logs instructions
+- **Block Detected**: Stops immediately, saves state, logs wait period
+- **Session Expired**: Prompts for cookie refresh
+- **Network Errors**: Retries with backoff
+- **Transient Errors**: Skips problematic items and continues
+
+### Monitoring Progress
+
+Progress is displayed in real-time:
+- Current year/month being processed
+- Items deleted per page
+- Total statistics
+- Errors encountered
+
+Logs are saved to `data/logs/` for detailed review.
 
 For detailed implementation information, see `DESIGN_DOCUMENT.md`.
 

@@ -4,7 +4,7 @@ Deletion engine for orchestrating item extraction, handler selection, and deleti
 from typing import Optional
 from datetime import datetime
 from pathlib import Path
-from playwright.sync_api import Page
+from playwright.sync_api import Page, TimeoutError as PlaywrightTimeoutError
 from config import settings
 from src.deletion.item_extractor import ItemExtractor
 from src.deletion.handlers import get_all_handlers, DeletionHandler
@@ -162,13 +162,14 @@ class DeletionEngine:
         
         return stats
     
-    def delete_item(self, page: Page, item: dict) -> tuple[bool, str]:
+    def delete_item(self, page: Page, item: dict, max_retries: int = 3) -> tuple[bool, str]:
         """
-        Delete a single item using the appropriate handler.
+        Delete a single item using the appropriate handler with retry logic.
         
         Args:
             page: Playwright Page object
             item: Item dictionary to delete
+            max_retries: Maximum number of retries for transient errors (default: 3)
         
         Returns:
             Tuple of (success: bool, message: str)
@@ -179,12 +180,28 @@ class DeletionEngine:
         if not handler:
             return False, f"No handler found for item type: {item.get('type')}"
         
-        # Execute deletion
-        try:
-            return handler.delete(page, item)
-        except Exception as e:
-            self.logger.error(f"Unexpected error during deletion: {e}")
-            return False, f"Unexpected error: {str(e)}"
+        # Retry logic for transient errors
+        last_error = None
+        for attempt in range(max_retries):
+            try:
+                success, message = handler.delete(page, item)
+                if success:
+                    return True, message
+                # If deletion failed but not due to transient error, don't retry
+                if 'timeout' not in message.lower() and 'network' not in message.lower():
+                    return False, message
+                last_error = message
+            except PlaywrightTimeoutError as e:
+                last_error = f"Timeout: {str(e)}"
+                if attempt < max_retries - 1:
+                    self.logger.warning(f"Retry {attempt + 1}/{max_retries} after timeout")
+                    continue
+            except Exception as e:
+                # Non-transient errors don't retry
+                self.logger.error(f"Unexpected error during deletion: {e}")
+                return False, f"Unexpected error: {str(e)}"
+        
+        return False, last_error or "Deletion failed after retries"
     
     def _select_handler(self, item: dict) -> Optional[DeletionHandler]:
         """

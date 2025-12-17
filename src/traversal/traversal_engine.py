@@ -23,6 +23,7 @@ class TraversalEngine:
         target_year: int = None,
         start_year: int = None,
         min_year: int = 2004,
+        resume_state: Optional[dict] = None,
         logger_instance=None
     ):
         """
@@ -34,6 +35,7 @@ class TraversalEngine:
             target_year: Year threshold - delete everything before this (defaults to settings.TARGET_YEAR)
             start_year: Starting year for traversal (defaults to settings.START_YEAR)
             min_year: Minimum year to traverse to (default: 2004, Facebook founding year)
+            resume_state: Optional state dictionary to resume from
             logger_instance: Optional logger instance
         """
         self.page = page
@@ -52,45 +54,92 @@ class TraversalEngine:
         # Target date for comparison (January 1 of target_year)
         self.target_date = datetime(self.target_year, 1, 1)
         
+        # Resume from state if provided
+        if resume_state:
+            self._apply_resume_state(resume_state)
+        
         self.logger.info(
             f"TraversalEngine initialized: username={username}, "
             f"start_year={self.start_year}, target_year={self.target_year}, min_year={self.min_year}"
         )
     
-    def traverse_years(self) -> Generator[dict, None, None]:
+    def _apply_resume_state(self, state: dict) -> None:
+        """
+        Apply resume state to adjust traversal starting point.
+        
+        Args:
+            state: State dictionary with current_year, current_month
+        """
+        if state.get('current_year') and state.get('current_month'):
+            resume_year = state['current_year']
+            resume_month = state['current_month']
+            
+            # Adjust start_year to resume position
+            if resume_year <= self.start_year:
+                self.start_year = resume_year
+                self.logger.info(f"Resuming from {resume_year}-{resume_month:02d}")
+            else:
+                self.logger.warning(
+                    f"Resume year {resume_year} is after start_year {self.start_year}, "
+                    "starting from configured start_year"
+                )
+    
+    def traverse_years(self, resume_state: Optional[dict] = None) -> Generator[dict, None, None]:
         """
         Generator that yields pages for each year from start_year down to min_year.
         
+        Args:
+            resume_state: Optional state dictionary for resume position
+        
         Yields:
-            Dictionary with keys: year, page, url, is_pagination
+            Dictionary with keys: year, month, page, url, is_pagination, page_number
         """
         self.logger.info(f"Starting year traversal: {self.start_year} -> {self.min_year}")
+        
+        # Determine resume position
+        resume_year = None
+        resume_month = None
+        if resume_state:
+            resume_year = resume_state.get('current_year')
+            resume_month = resume_state.get('current_month')
         
         for year in range(self.start_year, self.min_year - 1, -1):
             self.logger.info(f"Processing year: {year}")
             
             try:
+                # If resuming, only use resume_month for the resume year
+                month_to_resume = resume_month if year == resume_year else None
+                
                 # Traverse all months for this year
-                for page_info in self.traverse_months(year):
+                for page_info in self.traverse_months(year, resume_month=month_to_resume):
                     yield page_info
+                
+                # Clear resume_month after first year (only applies once)
+                if year == resume_year:
+                    resume_month = None
+                    
             except Exception as e:
                 self.logger.error(f"Error traversing year {year}: {e}")
                 # Continue to next year
                 continue
     
-    def traverse_months(self, year: int) -> Generator[dict, None, None]:
+    def traverse_months(self, year: int, resume_month: Optional[int] = None) -> Generator[dict, None, None]:
         """
         Generator that yields pages for each month in a year (December to January).
         
         Args:
             year: Year to traverse
+            resume_month: Optional month to resume from (skip months after this)
         
         Yields:
             Dictionary with keys: year, month, page, url, is_pagination
         """
         self.logger.info(f"Starting month traversal for year {year}")
         
-        for month in range(12, 0, -1):  # December (12) to January (1)
+        # Determine starting month (resume from specific month if provided)
+        start_month = resume_month if resume_month else 12
+        
+        for month in range(start_month, 0, -1):  # From start_month down to January (1)
             self.logger.info(f"Processing {year}-{month:02d}")
             
             try:

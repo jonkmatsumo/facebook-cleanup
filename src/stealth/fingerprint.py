@@ -56,6 +56,7 @@ def get_context_options(cookies_path: Optional[Path] = None) -> dict:
 def create_stealth_context(
     browser: Browser,
     cookies_path: Optional[Path] = None,
+    block_resources: bool = True,
     **extra_options
 ) -> BrowserContext:
     """
@@ -64,6 +65,7 @@ def create_stealth_context(
     Args:
         browser: Playwright Browser instance
         cookies_path: Optional path to cookies.json for storage_state
+        block_resources: Block images, videos, fonts for performance (default: True)
         **extra_options: Additional context options to merge
         
     Returns:
@@ -82,6 +84,19 @@ def create_stealth_context(
     
     # Create context
     context = browser.new_context(**context_options)
+    
+    # Block unnecessary resources for performance
+    if block_resources:
+        def handle_route(route):
+            """Block images, videos, fonts, and other non-essential resources."""
+            resource_type = route.request.resource_type
+            if resource_type in ['image', 'media', 'font', 'stylesheet']:
+                route.abort()
+            else:
+                route.continue_()
+        
+        context.route('**/*', handle_route)
+        logger.debug("Resource blocking enabled (images, videos, fonts)")
     
     logger.info("Stealth context created successfully")
     return context

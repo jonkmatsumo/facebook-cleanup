@@ -83,13 +83,14 @@ class BrowserManager:
             )
             self.logger.info(f"Browser launched (headless={headless})")
             
-            # Step 3: Create stealth context with cookies
+            # Step 3: Create stealth context with cookies and resource blocking
             self.logger.info("Step 3: Creating stealth context with cookies...")
             self.context = create_stealth_context(
                 self.browser,
-                cookies_path=self.cookie_path
+                cookies_path=self.cookie_path,
+                block_resources=True  # Block images, videos, fonts for performance
             )
-            self.logger.info("Stealth context created")
+            self.logger.info("Stealth context created with resource blocking")
             
             # Step 4: Create page and apply stealth patches
             self.logger.info("Step 4: Creating page and applying stealth patches...")
