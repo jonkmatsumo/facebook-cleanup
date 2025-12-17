@@ -1,0 +1,3 @@
+# This file ensures the data directory is tracked by git
+# Actual data files (cookies.json, progress.json, logs/*.log) are gitignored
+
