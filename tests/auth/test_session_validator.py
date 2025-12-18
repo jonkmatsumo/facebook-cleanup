@@ -152,13 +152,19 @@ class TestSessionValidator:
         mock_page = Mock()
         mock_page.url = "https://mbasic.facebook.com"
 
-        # Mock locator to raise exception
-        mock_page.locator.side_effect = Exception("Locator error")
+        # Mock locator to raise exception - this will be caught by inner try-except
+        # To test the outer exception handler, we need an exception that escapes
+        # The _check_login_redirect call is not in a try-except, so if it raises,
+        # it will be caught by the outer handler
+        mock_page.locator.return_value.count.return_value = 0  # All selectors return 0
+        # Mock _check_login_redirect to raise exception to trigger outer exception handler
+        with patch.object(
+            validator, "_check_login_redirect", side_effect=Exception("Check redirect error")
+        ):
+            # Should return False on exception
+            result = validator._check_session_indicators(mock_page)
 
-        # Should return False on exception
-        result = validator._check_session_indicators(mock_page)
-
-        assert result is False
+            assert result is False
 
     def test_detect_2fa_challenge_url(self):
         """Test detecting 2FA challenge in URL."""
