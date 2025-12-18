@@ -16,8 +16,8 @@ flowchart TD
     Auth --> Stealth[Apply Stealth Config]
     Stealth --> Traversal[TraversalEngine]
 
-    Traversal --> IterateYears[Iterate Years (start→min)]
-    IterateYears --> IterateMonths[Iterate Months Dec→Jan]
+    Traversal --> IterateYears[Iterate Years start to min]
+    IterateYears --> IterateMonths[Iterate Months Dec to Jan]
     IterateMonths --> Navigate[Navigate to Activity Log]
     Navigate --> Pagination[Handle Pagination]
 

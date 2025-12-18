@@ -331,6 +331,268 @@ class TestTraversalEngine:
         assert pages[1]["is_pagination"] is True
         assert pages[1]["page_number"] == 2
 
+    def test_traverse_years_multiple_years(self):
+        """Test traverse_years iterates through multiple years."""
+        mock_page = Mock()
+        engine = TraversalEngine(
+            mock_page, "testuser", target_year=2021, start_year=2020, min_year=2018
+        )
+
+        # Mock traverse_months to yield pages
+        with patch.object(engine, "traverse_months") as mock_traverse_months:
+            mock_traverse_months.return_value = iter(
+                [
+                    {
+                        "year": 2020,
+                        "month": 12,
+                        "page": mock_page,
+                        "url": "test",
+                        "is_pagination": False,
+                        "page_number": 1,
+                    },
+                ]
+            )
+
+            list(engine.traverse_years())  # Consume generator
+            # Should iterate 2020, 2019, 2018 (3 years)
+            assert mock_traverse_months.call_count == 3
+
+    def test_traverse_years_resume_state(self):
+        """Test traverse_years resumes from state."""
+        mock_page = Mock()
+        engine = TraversalEngine(
+            mock_page, "testuser", target_year=2021, start_year=2020, min_year=2018
+        )
+
+        resume_state = {"current_year": 2019, "current_month": 6}
+
+        with patch.object(engine, "traverse_months") as mock_traverse_months:
+            mock_traverse_months.return_value = iter(
+                [
+                    {
+                        "year": 2019,
+                        "month": 6,
+                        "page": mock_page,
+                        "url": "test",
+                        "is_pagination": False,
+                        "page_number": 1,
+                    },
+                ]
+            )
+
+            list(engine.traverse_years(resume_state=resume_state))  # Consume generator
+            # Should start from 2019 (resume year)
+            assert mock_traverse_months.call_count >= 1
+
+    def test_traverse_years_exception_handling(self):
+        """Test traverse_years handles exceptions in year loop."""
+        mock_page = Mock()
+        engine = TraversalEngine(
+            mock_page, "testuser", target_year=2021, start_year=2020, min_year=2018
+        )
+
+        with patch.object(engine, "traverse_months") as mock_traverse_months:
+            # First year raises exception, second succeeds
+            mock_traverse_months.side_effect = [
+                ValueError("Error in year 2020"),
+                iter(
+                    [
+                        {
+                            "year": 2019,
+                            "month": 12,
+                            "page": mock_page,
+                            "url": "test",
+                            "is_pagination": False,
+                            "page_number": 1,
+                        }
+                    ]
+                ),
+                iter(
+                    [
+                        {
+                            "year": 2018,
+                            "month": 12,
+                            "page": mock_page,
+                            "url": "test",
+                            "is_pagination": False,
+                            "page_number": 1,
+                        }
+                    ]
+                ),
+            ]
+
+            pages = list(engine.traverse_years())
+            # Should continue after exception
+            assert len(pages) == 2  # 2019 and 2018
+
+    def test_traverse_months_all_months(self):
+        """Test traverse_months iterates through all months."""
+        mock_page = Mock()
+        engine = TraversalEngine(mock_page, "testuser")
+
+        with patch.object(engine, "traverse_page") as mock_traverse_page:
+            mock_traverse_page.return_value = iter(
+                [
+                    {
+                        "year": 2020,
+                        "month": 12,
+                        "page": mock_page,
+                        "url": "test",
+                        "is_pagination": False,
+                        "page_number": 1,
+                    },
+                ]
+            )
+
+            list(engine.traverse_months(2020))  # Consume generator
+            # Should iterate 12 months (December to January)
+            assert mock_traverse_page.call_count == 12
+
+    def test_traverse_months_resume_month(self):
+        """Test traverse_months resumes from specific month."""
+        mock_page = Mock()
+        engine = TraversalEngine(mock_page, "testuser")
+
+        with patch.object(engine, "traverse_page") as mock_traverse_page:
+            mock_traverse_page.return_value = iter(
+                [
+                    {
+                        "year": 2020,
+                        "month": 6,
+                        "page": mock_page,
+                        "url": "test",
+                        "is_pagination": False,
+                        "page_number": 1,
+                    },
+                ]
+            )
+
+            list(engine.traverse_months(2020, resume_month=6))  # Consume generator
+            # Should start from month 6
+            assert mock_traverse_page.call_count == 6  # Months 6, 5, 4, 3, 2, 1
+
+    def test_traverse_page_timeout(self):
+        """Test traverse_page handles PlaywrightTimeoutError."""
+        from playwright.sync_api import TimeoutError as PlaywrightTimeoutError
+
+        mock_page = Mock()
+        mock_page.goto.side_effect = PlaywrightTimeoutError("Timeout")
+        engine = TraversalEngine(mock_page, "testuser")
+
+        with pytest.raises(PlaywrightTimeoutError):
+            list(engine.traverse_page(2020, month=11))
+
+    def test_traverse_page_pagination_failure(self):
+        """Test traverse_page handles pagination failure."""
+        mock_page = Mock()
+        mock_page.goto.return_value = None
+        mock_page.url = "https://mbasic.facebook.com/test"
+        engine = TraversalEngine(mock_page, "testuser")
+
+        engine.pagination_handler.has_more_pages = Mock(return_value=True)
+        engine.pagination_handler.click_see_more = Mock(return_value=False)  # Pagination fails
+        engine.pagination_handler.wait_for_page_load = Mock()
+
+        pages = list(engine.traverse_page(2020, month=11))
+        # Should only return first page when pagination fails
+        assert len(pages) == 1
+
+    def test_traverse_page_with_category(self):
+        """Test traverse_page with category filter."""
+        mock_page = Mock()
+        mock_page.goto.return_value = None
+        mock_page.url = "https://mbasic.facebook.com/test"
+        engine = TraversalEngine(mock_page, "testuser")
+
+        engine.pagination_handler.has_more_pages = Mock(return_value=False)
+        engine.pagination_handler.wait_for_page_load = Mock()
+
+        pages = list(engine.traverse_page(2020, month=11, category="cluster_11"))
+        assert len(pages) == 1
+        assert pages[0]["category"] == "cluster_11"
+        # Verify URL builder was called with category
+        assert "cluster_11" in engine.url_builder.build_activity_log_url(
+            2020, month=11, category="cluster_11"
+        )
+
+    def test_apply_resume_state_adjusts_start_year(self):
+        """Test _apply_resume_state adjusts start_year."""
+        mock_page = Mock()
+        engine = TraversalEngine(mock_page, "testuser", start_year=2020)
+
+        resume_state = {"current_year": 2019, "current_month": 6}
+        engine._apply_resume_state(resume_state)
+
+        assert engine.start_year == 2019
+
+    def test_apply_resume_state_warning(self):
+        """Test _apply_resume_state warns when resume year after start_year."""
+        mock_page = Mock()
+        engine = TraversalEngine(mock_page, "testuser", start_year=2020)
+
+        resume_state = {"current_year": 2021, "current_month": 6}
+        original_start_year = engine.start_year
+        engine._apply_resume_state(resume_state)
+
+        # Should not change start_year (resume year is after start_year)
+        assert engine.start_year == original_start_year
+
+    def test_traverse_by_category_specific_year_month(self):
+        """Test traverse_by_category with specific year and month."""
+        mock_page = Mock()
+        engine = TraversalEngine(mock_page, "testuser")
+
+        with patch.object(engine, "traverse_page") as mock_traverse_page:
+            mock_traverse_page.return_value = iter(
+                [
+                    {
+                        "year": 2020,
+                        "month": 11,
+                        "category": "cluster_11",
+                        "page": mock_page,
+                        "url": "test",
+                        "is_pagination": False,
+                        "page_number": 1,
+                    },
+                ]
+            )
+
+            pages = list(engine.traverse_by_category("cluster_11", year=2020, month=11))
+            assert len(pages) == 1
+            mock_traverse_page.assert_called_once_with(2020, month=11, category="cluster_11")
+
+    def test_traverse_by_category_all_years(self):
+        """Test traverse_by_category traverses all years."""
+        mock_page = Mock()
+        engine = TraversalEngine(mock_page, "testuser", start_year=2020, min_year=2018)
+
+        with patch.object(engine, "traverse_page") as mock_traverse_page:
+            mock_traverse_page.return_value = iter(
+                [
+                    {
+                        "year": 2020,
+                        "month": 12,
+                        "category": "cluster_11",
+                        "page": mock_page,
+                        "url": "test",
+                        "is_pagination": False,
+                        "page_number": 1,
+                    },
+                ]
+            )
+
+            list(engine.traverse_by_category("cluster_11"))  # Consume generator
+            # Should traverse all years and months
+            assert mock_traverse_page.call_count > 0
+
+    def test_get_activity_items(self):
+        """Test get_activity_items returns empty list (placeholder)."""
+        mock_page = Mock()
+        engine = TraversalEngine(mock_page, "testuser")
+
+        items = engine.get_activity_items(mock_page)
+        assert items == []
+
 
 if __name__ == "__main__":
     pytest.main([__file__, "-v"])

@@ -42,6 +42,9 @@ data/cookies.json
 data/progress.json
 data/logs/*.log
 
+# Backup files
+*.bak
+
 # Playwright
 .playwright/
 
