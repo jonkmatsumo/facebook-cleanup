@@ -12,6 +12,7 @@ from src.traversal.traversal_engine import TraversalEngine
 from src.traversal.url_builder import URLBuilder
 
 
+@pytest.mark.unit
 class TestURLBuilder:
     """Test URLBuilder class."""
 
@@ -91,6 +92,7 @@ class TestURLBuilder:
         assert "12" in str(exc_info.value)
 
 
+@pytest.mark.unit
 class TestDateParser:
     """Test DateParser class."""
 
@@ -197,6 +199,7 @@ class TestDateParser:
         assert parser.is_before_target("November 3, 2021", target) is False
 
 
+@pytest.mark.unit
 class TestPaginationHandler:
     """Test PaginationHandler class."""
 
@@ -269,6 +272,7 @@ class TestPaginationHandler:
         mock_page.wait_for_load_state.assert_called()
 
 
+@pytest.mark.unit
 class TestTraversalEngine:
     """Test TraversalEngine class."""
 

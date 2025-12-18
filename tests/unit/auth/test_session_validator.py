@@ -8,6 +8,7 @@ import pytest
 from src.auth.session_validator import SessionValidator
 
 
+@pytest.mark.unit
 class TestSessionValidator:
     """Test SessionValidator class."""
 

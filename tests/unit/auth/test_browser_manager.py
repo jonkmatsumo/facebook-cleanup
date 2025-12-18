@@ -9,6 +9,7 @@ import pytest
 from src.auth.browser_manager import BrowserManager
 
 
+@pytest.mark.unit
 class TestBrowserManager:
     """Test BrowserManager class."""
 

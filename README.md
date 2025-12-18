@@ -186,8 +186,6 @@ Progress is displayed in real-time:
 
 Logs are saved to `data/logs/` for detailed review.
 
-For detailed implementation information, see `DESIGN_DOCUMENT.md`.
-
 ## Project Structure
 
 ```

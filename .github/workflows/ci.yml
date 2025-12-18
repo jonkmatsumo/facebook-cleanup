@@ -137,7 +137,7 @@ jobs:
 
       - name: Run unit tests with coverage
         run: |
-          pytest tests/ -m "not slow" \
+          pytest tests/unit/ -m "not slow" \
             --cov=src \
             --cov-report=xml \
             --cov-report=html \

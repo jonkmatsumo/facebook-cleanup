@@ -15,6 +15,7 @@ from src.deletion.handlers.reaction_handler import ReactionRemovalHandler
 from src.deletion.item_extractor import ItemExtractor
 
 
+@pytest.mark.unit
 class TestBaseHandler:
     """Test DeletionHandler base class."""
 
@@ -74,6 +75,7 @@ class TestBaseHandler:
         assert result is True
 
 
+@pytest.mark.unit
 class TestPostDeletionHandler:
     """Test PostDeletionHandler."""
 
@@ -115,6 +117,7 @@ class TestPostDeletionHandler:
                 assert "success" in message.lower()
 
 
+@pytest.mark.unit
 class TestCommentDeletionHandler:
     """Test CommentDeletionHandler."""
 
@@ -131,6 +134,7 @@ class TestCommentDeletionHandler:
         assert handler.can_handle(item) is False
 
 
+@pytest.mark.unit
 class TestReactionRemovalHandler:
     """Test ReactionRemovalHandler."""
 
@@ -147,6 +151,7 @@ class TestReactionRemovalHandler:
         assert handler.can_handle(item) is False
 
 
+@pytest.mark.unit
 class TestItemExtractor:
     """Test ItemExtractor."""
 
@@ -196,6 +201,7 @@ class TestItemExtractor:
         assert item_type == "reaction"
 
 
+@pytest.mark.unit
 class TestDeletionEngine:
     """Test DeletionEngine."""
 
@@ -282,6 +288,7 @@ class TestDeletionEngine:
             assert stats["skipped"] == 0
 
 
+@pytest.mark.unit
 class TestHandlerRegistry:
     """Test handler registry."""
 

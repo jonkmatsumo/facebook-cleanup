@@ -14,6 +14,7 @@ from src.stealth.behavior import human_delay, micro_pause, wait_before_action
 from src.utils.state_manager import StateManager
 
 
+@pytest.mark.unit
 class TestGaussianDelays:
     """Test Gaussian delay functions."""
 
@@ -43,6 +44,7 @@ class TestGaussianDelays:
         assert 0.05 <= elapsed <= 0.15  # Allow some overhead
 
 
+@pytest.mark.unit
 class TestRateLimiter:
     """Test RateLimiter class."""
 
@@ -99,6 +101,7 @@ class TestRateLimiter:
         assert len(limiter.action_times) == 0
 
 
+@pytest.mark.unit
 class TestErrorDetector:
     """Test ErrorDetector class."""
 
@@ -135,6 +138,7 @@ class TestErrorDetector:
         assert error_detected is False
 
 
+@pytest.mark.unit
 class TestBlockManager:
     """Test BlockManager class."""
 
@@ -217,6 +221,7 @@ class TestBlockManager:
         assert "can_continue" in info
 
 
+@pytest.mark.unit
 class TestStateManager:
     """Test StateManager class."""
 

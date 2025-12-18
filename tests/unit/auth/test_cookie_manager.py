@@ -9,6 +9,7 @@ import pytest
 from src.auth.cookie_manager import CookieManager
 
 
+@pytest.mark.unit
 class TestCookieManager:
     """Test CookieManager class."""
 

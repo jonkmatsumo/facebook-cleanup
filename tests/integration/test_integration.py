@@ -12,6 +12,7 @@ from src.utils.state_manager import StateManager
 from src.utils.statistics import StatisticsReporter
 
 
+@pytest.mark.integration
 class TestIntegration:
     """Test complete integration workflow."""
 
