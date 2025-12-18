@@ -12,20 +12,6 @@ from src.auth.cookie_manager import REQUIRED_COOKIES, CookieManager
 from src.auth.session_validator import SessionValidator
 
 
-@pytest.fixture
-def invalid_cookie_data():
-    """Invalid cookie data structure."""
-    return {
-        "cookies": [
-            {
-                "name": "c_user",
-                "value": "123456789",
-                # Missing domain and path
-            }
-        ]
-    }
-
-
 class TestCookieManager:
     """Test CookieManager class."""
 
