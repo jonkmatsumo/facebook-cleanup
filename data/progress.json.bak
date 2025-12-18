@@ -1,12 +1,12 @@
 {
-  "last_updated": "2025-12-17T17:04:41.945432",
+  "last_updated": "2025-12-17T18:03:33.833124",
   "current_year": null,
   "current_month": null,
   "current_category": null,
-  "total_deleted": 3,
-  "deleted_today": 3,
+  "total_deleted": 4,
+  "deleted_today": 4,
   "last_url": null,
-  "errors_encountered": 12,
+  "errors_encountered": 16,
   "block_detected": false,
   "block_count": 0,
   "session_start": "2025-12-17T16:51:59.560959"

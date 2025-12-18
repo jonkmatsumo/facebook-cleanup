@@ -45,6 +45,12 @@ data/logs/*.log
 # Playwright
 .playwright/
 
+# Coverage reports
+htmlcov/
+.coverage
+coverage.xml
+*.cover
+
 # OS
 .DS_Store
 Thumbs.db

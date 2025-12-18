@@ -1,6 +1,6 @@
 # Facebook Cleanup - Automated Content Deletion
 
-Automated deletion of Facebook content created before 2021 using browser automation.
+Automated deletion of Facebook content within a specified date range using browser automation.
 
 ## Overview
 
@@ -16,14 +16,14 @@ flowchart TD
     Auth --> Stealth[Apply Stealth Config]
     Stealth --> Traversal[TraversalEngine]
 
-    Traversal --> IterateYears[Iterate Years 2020→2004]
+    Traversal --> IterateYears[Iterate Years (start→min)]
     IterateYears --> IterateMonths[Iterate Months Dec→Jan]
     IterateMonths --> Navigate[Navigate to Activity Log]
     Navigate --> Pagination[Handle Pagination]
 
     Pagination --> DeletionEngine[DeletionEngine]
     DeletionEngine --> Extract[Extract Items]
-    Extract --> Filter[Filter by Date < 2021]
+    Extract --> Filter[Filter by Date Range]
 
     Filter --> RateLimit[Rate Limiter Check]
     RateLimit -->|Under Limit| Delay[Apply Gaussian Delay]
@@ -141,14 +141,26 @@ Edit `.env` and set:
 Once cookies are configured, run the cleanup script:
 
 ```bash
+# Delete content before a specific date (uses default start date from settings)
+python main.py --end-date 2021-12-31
+
+# Delete content in a specific date range
+python main.py --start-date 2020-01-01 --end-date 2021-12-31
+
+# Use default dates (from settings: START_YEAR and TARGET_YEAR)
 python main.py
 ```
+
+**Command-line Arguments:**
+- `--start-date YYYY-MM-DD`: Start date for deletion range (optional, defaults to `START_YEAR` from settings)
+- `--end-date YYYY-MM-DD`: End date for deletion range - items before or on this date will be deleted (optional, defaults to `TARGET_YEAR` from settings)
+- `--target-date YYYY-MM-DD`: Alias for `--end-date`
 
 The script will:
 1. Load saved progress (if exists) and resume from last position
 2. Create authenticated browser session
-3. Navigate through Activity Log by year and month
-4. Extract and delete items created before 2021
+3. Navigate through Activity Log by year and month within the specified date range
+4. Extract and delete items within the date range
 5. Save progress after each page
 6. Handle errors and blocks automatically
 7. Display final statistics
@@ -214,8 +226,13 @@ Key settings are defined in `config/settings.py`:
 
 - **Rate Limiting**: Max 50 deletions per hour (default)
 - **Delays**: Gaussian distribution with mean 5s, std dev 1.5s
-- **Target**: Content before 2021
+- **Date Range**: Default start year (`START_YEAR`) and target year (`TARGET_YEAR`) - can be overridden with CLI arguments
 - **Interface**: mbasic.facebook.com (legacy mobile)
+
+**CLI Arguments Override Settings:**
+- Command-line arguments (`--start-date` and `--end-date`) take precedence over settings
+- If not provided, the script uses `START_YEAR` and `TARGET_YEAR` from `config/settings.py`
+- Date format must be `YYYY-MM-DD` (e.g., `2021-12-31`)
 
 ## Safety Features
 

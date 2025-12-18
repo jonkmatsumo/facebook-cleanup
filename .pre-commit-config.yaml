@@ -44,3 +44,10 @@ repos:
         language: system
         pass_filenames: false
         always_run: true
+      - id: coverage-report
+        name: Coverage Report
+        entry: bash -c 'if [ -f venv/bin/pytest ]; then venv/bin/pytest tests/unit/ -m "not slow" --cov=src --cov-config=.coveragerc --cov-report=term --cov-report=html -q 2>/dev/null || true; elif command -v pytest >/dev/null 2>&1; then pytest tests/unit/ -m "not slow" --cov=src --cov-config=.coveragerc --cov-report=term --cov-report=html -q 2>/dev/null || true; else echo "pytest not found, skipping coverage"; exit 0; fi'
+        language: system
+        stages: [post-commit]
+        always_run: true
+        pass_filenames: false

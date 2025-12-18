@@ -2,13 +2,16 @@
 """
 Facebook Cleanup - Main entry point.
 
-Automated deletion of Facebook content created before 2021.
+Automated deletion of Facebook content within a specified date range.
 """
 
+import argparse
 import re
 import signal
 import sys
+from datetime import datetime
 from pathlib import Path
+from typing import Optional
 
 # Add project root to path for imports
 project_root = Path(__file__).parent
@@ -33,6 +36,75 @@ from src.utils.statistics import StatisticsReporter  # noqa: E402
 browser_manager = None
 state_manager = None
 stats_reporter = None
+
+
+def parse_arguments() -> argparse.Namespace:
+    """
+    Parse command-line arguments.
+
+    Returns:
+        Parsed arguments namespace
+    """
+    parser = argparse.ArgumentParser(
+        description="Automated deletion of Facebook content within a specified date range.",
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog="""
+Examples:
+  # Delete content before a specific date
+  python main.py --end-date 2021-12-31
+
+  # Delete content in a specific date range
+  python main.py --start-date 2020-01-01 --end-date 2021-12-31
+
+  # Use default dates (from settings)
+  python main.py
+        """,
+    )
+
+    parser.add_argument(
+        "--start-date",
+        type=str,
+        default=None,
+        help="Start date for deletion range (YYYY-MM-DD). Defaults to START_YEAR from settings.",
+    )
+
+    parser.add_argument(
+        "--end-date",
+        "--target-date",
+        type=str,
+        dest="end_date",
+        default=None,
+        help="End date for deletion range (YYYY-MM-DD). Items before or on this date will be deleted. Defaults to TARGET_YEAR from settings.",
+    )
+
+    args = parser.parse_args()
+
+    # Validate and parse dates
+    start_date = None
+    end_date = None
+
+    if args.start_date:
+        try:
+            start_date = datetime.strptime(args.start_date, "%Y-%m-%d")
+        except ValueError:
+            parser.error(f"Invalid start-date format: {args.start_date}. Expected YYYY-MM-DD")
+
+    if args.end_date:
+        try:
+            end_date = datetime.strptime(args.end_date, "%Y-%m-%d")
+            # Set to end of day for inclusive date range
+            end_date = end_date.replace(hour=23, minute=59, second=59)
+        except ValueError:
+            parser.error(f"Invalid end-date format: {args.end_date}. Expected YYYY-MM-DD")
+
+    # Validate date range
+    if start_date and end_date and start_date > end_date:
+        parser.error("start-date must be before or equal to end-date")
+
+    args.start_date = start_date
+    args.end_date = end_date
+
+    return args
 
 
 def signal_handler(signum, frame):
@@ -61,9 +133,14 @@ def signal_handler(signum, frame):
     sys.exit(0)
 
 
-def run_cleanup() -> int:
+def run_cleanup(start_date: Optional[datetime] = None, end_date: Optional[datetime] = None) -> int:
     """
     Execute the complete cleanup process.
+
+    Args:
+        start_date: Start date for deletion range (optional, defaults to START_YEAR from settings)
+        end_date: End date for deletion range - items before or on this date will be deleted
+                 (optional, defaults to TARGET_YEAR from settings)
 
     Returns:
         Exit code (0 for success, non-zero for errors)
@@ -77,11 +154,28 @@ def run_cleanup() -> int:
     signal.signal(signal.SIGINT, signal_handler)
     signal.signal(signal.SIGTERM, signal_handler)
 
+    # Calculate date range from arguments or settings
+    if start_date:
+        start_year = start_date.year
+        start_date_str = start_date.strftime("%Y-%m-%d")
+    else:
+        start_year = settings.START_YEAR
+        start_date_str = f"{settings.START_YEAR}-01-01"
+
+    if end_date:
+        target_year = end_date.year
+        end_date_str = end_date.strftime("%Y-%m-%d")
+        target_date = end_date
+    else:
+        target_year = settings.TARGET_YEAR
+        end_date_str = f"{settings.TARGET_YEAR}-01-01"
+        target_date = datetime(settings.TARGET_YEAR, 1, 1)
+
     logger.info("=" * 60)
     logger.info("Facebook Cleanup - Automated Content Deletion")
     logger.info("=" * 60)
-    logger.info(f"Target Year: {settings.TARGET_YEAR}")
-    logger.info(f"Start Year: {settings.START_YEAR}")
+    logger.info(f"Start Date: {start_date_str}")
+    logger.info(f"End Date: {end_date_str}")
     logger.info(f"Max Deletions/Hour: {settings.MAX_DELETIONS_PER_HOUR}")
     logger.info(f"Interface: {settings.TARGET_INTERFACE}")
     logger.info("=" * 60)
@@ -126,11 +220,17 @@ def run_cleanup() -> int:
 
         # Initialize TraversalEngine with resume state
         logger.info("Initializing traversal engine...")
-        traversal_engine = TraversalEngine(page=page, username=username, resume_state=saved_state)
+        traversal_engine = TraversalEngine(
+            page=page,
+            username=username,
+            target_year=target_year,
+            start_year=start_year,
+            resume_state=saved_state,
+        )
 
         # Initialize DeletionEngine (safety mechanisms already integrated)
         logger.info("Initializing deletion engine...")
-        deletion_engine = DeletionEngine(page=page)
+        deletion_engine = DeletionEngine(page=page, target_date=target_date)
 
         # Main processing loop
         logger.info("=" * 60)
@@ -277,10 +377,11 @@ def main():
     """
     Main entry point for Facebook cleanup script.
 
-    Phase 6: Complete Integration - End-to-end cleanup workflow.
+    Parses command-line arguments and runs the cleanup process.
     """
     try:
-        return run_cleanup()
+        args = parse_arguments()
+        return run_cleanup(start_date=args.start_date, end_date=args.end_date)
     except KeyboardInterrupt:
         # Handle keyboard interrupt at top level
         logger = setup_logging()
